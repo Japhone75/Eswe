@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "ENGWE Speed Tool",
+    "slug": "engwe-speed-tool",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a1a"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "net.ridelabz.engwespeedtool",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "ENGWE Speed Tool needs Bluetooth to connect to your e-bike and read its status and settings.",
+        "NSBluetoothPeripheralUsageDescription": "ENGWE Speed Tool needs Bluetooth to connect to your e-bike.",
+        "UIBackgroundModes": ["bluetooth-central"]
+      },
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a1a"
+      },
+      "package": "net.ridelabz.engwespeedtool",
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["peripheral", "central"],
+          "bluetoothAlwaysPermission": "Allow ENGWE Speed Tool to use Bluetooth to connect to your e-bike."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "14.0"
+          },
+          "android": {
+            "minSdkVersion": 31
+          }
+        }
+      ]
+    ],
+    "scheme": "engwe-speed-tool",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
