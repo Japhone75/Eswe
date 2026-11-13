@@ -32,29 +32,48 @@ jobs:
           pod install
           cd ..
 
-      - name: Archive Xcode project
+      - name: Compile Xcode project
         run: |
           WORKSPACE=$(find ios -name "*.xcworkspace" | head -n 1)
+          # Find the main app scheme, ignoring CocoaPods and test schemes
           SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | node -e '
             const data = JSON.parse(require("fs").readFileSync(0, "utf-8"));
-            console.log(data.workspace.schemes[0]);
+            const schemes = data.workspace.schemes;
+            console.error("All schemes found:", schemes.join(", "));
+            const mainScheme = schemes.find(s => !s.startsWith("Pods-") && !s.includes("Test") && !s.includes("Pods")) || schemes[0];
+            console.error("Selected scheme:", mainScheme);
+            process.stdout.write(mainScheme);
           ')
-          echo "Archiving workspace: $WORKSPACE with scheme: $SCHEME"
+          echo ""
+          echo "Building workspace: $WORKSPACE with scheme: $SCHEME"
+          
+          mkdir -p build/output
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
+            -sdk iphoneos \
             -destination "generic/platform=iOS" \
-            -archivePath "$PWD/build/App.xcarchive" \
+            CONFIGURATION_BUILD_DIR="$PWD/build/output" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            archive
+            build
 
       - name: Package into IPA
         run: |
+          echo "=== Contents of build/output ==="
+          ls -la build/output/
+          
+          APP_PATH=$(find build/output -name "*.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Searching whole build directory:"
+            APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+          fi
+          
+          echo "Selected app bundle: $APP_PATH"
           mkdir -p Payload
-          cp -R build/App.xcarchive/Products/Applications/*.app Payload/
+          cp -R "$APP_PATH" Payload/
           zip -qr engwe-speed-tool.ipa Payload
           ls -lh engwe-speed-tool.ipa
 
