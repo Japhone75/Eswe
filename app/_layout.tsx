@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useSettingsStore } from '../src/store/settingsStore';
 
@@ -17,7 +18,9 @@ export default function RootLayout() {
     loadSettings().finally(() => setReady(true));
   }, []);
 
-  if (!ready) return null;
+  if (!ready) {
+    return <View style={{ flex: 1, backgroundColor: '#0a0a1a' }} />;
+  }
 
   return (
     <SafeAreaProvider>

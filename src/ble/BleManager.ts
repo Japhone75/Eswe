@@ -35,15 +35,20 @@ import { useBikeStore } from '../store/bikeStore';
 import { logger } from '../utils/logger';
 
 class BleManagerService {
-  private manager: RNBleManager;
+  private _manager: RNBleManager | null = null;
   private connectedDevice: Device | null = null;
   private notifySubscription: { remove: () => void } | null = null;
   private frameBuffer: Uint8Array = new Uint8Array(0);
   private scanTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  constructor() {
-    this.manager = new RNBleManager();
+  private get manager(): RNBleManager {
+    if (!this._manager) {
+      this._manager = new RNBleManager();
+    }
+    return this._manager;
   }
+
+  constructor() {}
 
   /** Check if Bluetooth is powered on */
   async waitForBluetooth(): Promise<void> {

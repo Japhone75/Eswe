@@ -1,27 +1,17 @@
 /**
- * Entry point – redirects to safety (first run) or scanner
+ * Entry point – redirects cleanly to safety (first run) or tabs
  */
 
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { Redirect } from 'expo-router';
 import { useSettingsStore } from '../src/store/settingsStore';
 
 export default function Index() {
-  const router = useRouter();
   const safetyAccepted = useSettingsStore((s) => s.safetyAccepted);
 
-  useEffect(() => {
-    if (safetyAccepted) {
-      router.replace('/(tabs)');
-    } else {
-      router.replace('/safety');
-    }
-  }, [safetyAccepted]);
+  if (safetyAccepted) {
+    return <Redirect href="/(tabs)" />;
+  }
 
-  return (
-    <View style={{ flex: 1, backgroundColor: '#0a0a1a', justifyContent: 'center', alignItems: 'center' }}>
-      <ActivityIndicator color="#4a9eff" size="large" />
-    </View>
-  );
+  return <Redirect href="/safety" />;
 }
