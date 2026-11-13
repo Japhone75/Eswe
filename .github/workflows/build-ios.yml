@@ -34,27 +34,22 @@ jobs:
 
       - name: Compile Xcode project
         run: |
-          WORKSPACE=$(find ios -name "*.xcworkspace" | head -n 1)
-          # Find the main app scheme, ignoring CocoaPods and test schemes
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | node -e '
-            const data = JSON.parse(require("fs").readFileSync(0, "utf-8"));
-            const schemes = data.workspace.schemes;
-            console.error("All schemes found:", schemes.join(", "));
-            const mainScheme = schemes.find(s => !s.startsWith("Pods-") && !s.includes("Test") && !s.includes("Pods")) || schemes[0];
-            console.error("Selected scheme:", mainScheme);
-            process.stdout.write(mainScheme);
-          ')
-          echo ""
-          echo "Building workspace: $WORKSPACE with scheme: $SCHEME"
+          # Find the main project xcodeproj in ios/ (ignoring ios/Pods)
+          XCODEPROJ=$(find ios -maxdepth 1 -name "*.xcodeproj" | head -n 1)
+          SCHEME=$(basename "$XCODEPROJ" .xcodeproj)
+          WORKSPACE=$(find ios -maxdepth 1 -name "*.xcworkspace" | head -n 1)
           
-          mkdir -p build/output
+          echo "=== Build Target Info ==="
+          echo "Main App Scheme: $SCHEME"
+          echo "Workspace: $WORKSPACE"
+          
           xcodebuild \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
-            CONFIGURATION_BUILD_DIR="$PWD/build/output" \
+            -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -62,16 +57,19 @@ jobs:
 
       - name: Package into IPA
         run: |
-          echo "=== Contents of build/output ==="
-          ls -la build/output/
-          
-          APP_PATH=$(find build/output -name "*.app" -type d | head -n 1)
+          echo "=== Locating built .app bundle ==="
+          APP_PATH=$(find build -name "*.app" -type d | head -n 1)
           if [ -z "$APP_PATH" ]; then
-            echo "Searching whole build directory:"
-            APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+            echo "Searching Library DerivedData fallback:"
+            APP_PATH=$(find /Users/runner/Library/Developer/Xcode/DerivedData -name "*.app" -type d | head -n 1)
           fi
           
-          echo "Selected app bundle: $APP_PATH"
+          echo "Found app bundle at: $APP_PATH"
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: No .app bundle found!"
+            exit 1
+          fi
+          
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -qr engwe-speed-tool.ipa Payload
