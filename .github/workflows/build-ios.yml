@@ -53,11 +53,22 @@ jobs:
 
       - name: Package into IPA
         run: |
-          APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
-          echo "Packaging $APP_PATH into IPA"
+          echo "=== Locating built .app bundle ==="
+          find build -name "*.app" -type d || true
+          APP_PATH=$(find build -name "*.app" -type d | grep -v "Pods" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find . -name "*.app" -type d | grep -v "Pods" | head -n 1)
+          fi
+          echo "Using APP_PATH: $APP_PATH"
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "ERROR: Could not find valid .app directory"
+            exit 1
+          fi
+          rm -rf Payload
           mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r engwe-speed-tool.ipa Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qr engwe-speed-tool.ipa Payload
+          ls -lh engwe-speed-tool.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
