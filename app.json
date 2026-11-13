@@ -51,9 +51,7 @@
         "react-native-ble-plx",
         {
           "isBackgroundEnabled": false,
-          "modes": [
-            "central"
-          ],
+          "modes": [],
           "bluetoothAlwaysPermission": "Allow ENGWE Speed Tool to use Bluetooth to connect to your e-bike."
         }
       ],

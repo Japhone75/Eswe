@@ -46,7 +46,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="speedometer" size={size} color={color} />
           ),
-          href: connected ? undefined : null,
         }}
       />
       <Tabs.Screen
@@ -57,7 +56,6 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="flash" size={size} color={color} />
           ),
-          href: connected ? undefined : null,
         }}
       />
       <Tabs.Screen

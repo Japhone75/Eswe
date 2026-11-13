@@ -98,6 +98,7 @@ class BleManagerService {
   }
 
   stopScan(): void {
+    if (!this._manager) return;
     this.manager.stopDeviceScan();
     if (this.scanTimeout) {
       clearTimeout(this.scanTimeout);

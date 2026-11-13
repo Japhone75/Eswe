@@ -38,13 +38,17 @@ Technical limitations
 
 By tapping "I understand and accept" you confirm that you have read this notice, that you understand and accept these risks, and that you will use the app responsibly and lawfully.`;
 
-export default function SafetyScreen() {
+export default function SafetyScreen({ onAccepted }: { onAccepted?: () => void } = {}) {
   const router = useRouter();
   const { acceptSafety } = useSettingsStore();
 
   async function handleAccept() {
     await acceptSafety();
-    router.replace('/(tabs)');
+    if (onAccepted) {
+      onAccepted();
+    } else {
+      router.replace('/(tabs)');
+    }
   }
 
   return (
