@@ -32,37 +32,49 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   darkMode: 'auto',
 
   loadSettings: async () => {
-    const [safety, keepSpeed, keepAssist, darkMode] = await Promise.all([
-      AsyncStorage.getItem(KEYS.safetyAccepted),
-      AsyncStorage.getItem(KEYS.keepSpeed),
-      AsyncStorage.getItem(KEYS.keepAssist),
-      AsyncStorage.getItem(KEYS.darkMode),
-    ]);
-    set({
-      safetyAccepted: safety === 'true',
-      keepSpeed: keepSpeed === 'true',
-      keepAssist: keepAssist === 'true',
-      darkMode: (darkMode as 'auto' | 'dark' | 'light') ?? 'auto',
-    });
+    try {
+      const [safety, keepSpeed, keepAssist, darkMode] = await Promise.all([
+        AsyncStorage.getItem(KEYS.safetyAccepted),
+        AsyncStorage.getItem(KEYS.keepSpeed),
+        AsyncStorage.getItem(KEYS.keepAssist),
+        AsyncStorage.getItem(KEYS.darkMode),
+      ]);
+      set({
+        safetyAccepted: safety === 'true',
+        keepSpeed: keepSpeed === 'true',
+        keepAssist: keepAssist === 'true',
+        darkMode: (darkMode as 'auto' | 'dark' | 'light') ?? 'auto',
+      });
+    } catch (e) {
+      console.warn('Failed to load settings from storage', e);
+    }
   },
 
   acceptSafety: async () => {
-    await AsyncStorage.setItem(KEYS.safetyAccepted, 'true');
+    try {
+      await AsyncStorage.setItem(KEYS.safetyAccepted, 'true');
+    } catch {}
     set({ safetyAccepted: true });
   },
 
   setKeepSpeed: async (v) => {
-    await AsyncStorage.setItem(KEYS.keepSpeed, String(v));
+    try {
+      await AsyncStorage.setItem(KEYS.keepSpeed, String(v));
+    } catch {}
     set({ keepSpeed: v });
   },
 
   setKeepAssist: async (v) => {
-    await AsyncStorage.setItem(KEYS.keepAssist, String(v));
+    try {
+      await AsyncStorage.setItem(KEYS.keepAssist, String(v));
+    } catch {}
     set({ keepAssist: v });
   },
 
   setDarkMode: async (v) => {
-    await AsyncStorage.setItem(KEYS.darkMode, v);
+    try {
+      await AsyncStorage.setItem(KEYS.darkMode, v);
+    } catch {}
     set({ darkMode: v });
   },
 }));
