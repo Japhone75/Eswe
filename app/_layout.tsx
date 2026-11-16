@@ -6,8 +6,26 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+
+// Intercept unhandled JS exceptions in release mode to prevent native abort()
+if (typeof global !== 'undefined' && (global as any).ErrorUtils) {
+  const originalHandler = (global as any).ErrorUtils.getGlobalHandler?.();
+  (global as any).ErrorUtils.setHandler((error: any, isFatal?: boolean) => {
+    console.error('Captured JS Error:', error);
+    try {
+      Alert.alert(
+        'App Notice',
+        String(error?.message || error) + (error?.stack ? '\n\n' + String(error.stack).slice(0, 300) : '')
+      );
+    } catch {}
+    if (originalHandler) {
+      // Pass isFatal: false to prevent NativeExceptionsManager.reportFatal from calling abort()
+      originalHandler(error, false);
+    }
+  });
+}
 
 // Catch-all Error Boundary for Expo Router: displays any crash on-screen instead of SIGABRT
 export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
