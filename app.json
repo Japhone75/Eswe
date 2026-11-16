@@ -2,7 +2,7 @@
   "expo": {
     "name": "ENGWE Speed Tool",
     "slug": "engwe-speed-tool",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -21,7 +21,7 @@
         "NSBluetoothPeripheralUsageDescription": "ENGWE Speed Tool needs Bluetooth to connect to your e-bike.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "15"
+      "buildNumber": "16"
     },
     "android": {
       "adaptiveIcon": {

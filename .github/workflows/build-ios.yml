@@ -72,12 +72,12 @@ jobs:
           
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
-          zip -qr engwe-speed-tool-b15.ipa Payload
-          ls -lh engwe-speed-tool-b15.ipa
+          zip -qr engwe-speed-tool-b16.ipa Payload
+          ls -lh engwe-speed-tool-b16.ipa
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: engwe-speed-tool-b15
-          path: engwe-speed-tool-b15.ipa
+          name: engwe-speed-tool-b16
+          path: engwe-speed-tool-b16.ipa
           retention-days: 14
