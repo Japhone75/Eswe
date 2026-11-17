@@ -5,37 +5,50 @@
 
 import { NativeModules, Alert } from 'react-native';
 
-// Intercept fatal JS exceptions so Release builds NEVER call native abort()
+function formatError(errorOrData) {
+  if (!errorOrData) return 'Unknown error';
+  let title = errorOrData.message || errorOrData.name || String(errorOrData);
+  let details = '';
+  if (Array.isArray(errorOrData.stack)) {
+    details = errorOrData.stack
+      .slice(0, 4)
+      .map((f) => `${f.methodName || 'anonymous'} (${(f.file || '?').split('/').pop()}:${f.lineNumber || '?'})`)
+      .join('\n');
+  } else if (typeof errorOrData.stack === 'string') {
+    details = errorOrData.stack.split('\n').slice(0, 4).join('\n');
+  }
+  if (errorOrData.componentStack) {
+    details += '\n' + String(errorOrData.componentStack).trim().split('\n').slice(0, 3).join('\n');
+  }
+  return details ? `${title}\n\n${details}` : title;
+}
+
+let lastAlertTime = 0;
+function showAlert(title, message) {
+  const now = Date.now();
+  if (now - lastAlertTime < 1000) return; // Prevent spamming duplicate alerts
+  lastAlertTime = now;
+  try {
+    Alert.alert(title, String(message).slice(0, 600));
+  } catch {}
+}
+
 if (NativeModules && NativeModules.ExceptionsManager) {
   NativeModules.ExceptionsManager.reportFatal = function (title, stack, exceptionId) {
     console.error('CAUGHT FATAL EXCEPTION:', title, stack);
-    try {
-      Alert.alert(
-        'App Notice',
-        String(title) + '\n\n' + JSON.stringify(stack || '').slice(0, 300)
-      );
-    } catch {}
-    // Do NOT bridge to native reportFatal to prevent abort()
+    showAlert('Fatal Notice', String(title) + '\n\n' + JSON.stringify(stack || '').slice(0, 300));
   };
 
   NativeModules.ExceptionsManager.reportException = function (data) {
     console.error('CAUGHT EXCEPTION:', data);
-    try {
-      Alert.alert(
-        'App Notice',
-        (data && data.message ? data.message : JSON.stringify(data)).slice(0, 500)
-      );
-    } catch {}
-    // Do NOT bridge to native reportException if fatal
+    showAlert('App Notice', formatError(data));
   };
 }
 
 if (typeof global !== 'undefined' && global.ErrorUtils) {
   global.ErrorUtils.setHandler((error, isFatal) => {
     console.error('CAUGHT GLOBAL ERROR:', error);
-    try {
-      Alert.alert('App Error', String(error?.message || error));
-    } catch {}
+    showAlert('App Error', formatError(error));
   });
 }
 

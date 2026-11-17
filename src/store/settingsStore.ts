@@ -25,7 +25,7 @@ const KEYS = {
   darkMode: '@engwe:darkMode',
 };
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
+export const useSettingsStore = create<SettingsStore>()((set) => ({
   safetyAccepted: false,
   keepSpeed: false,
   keepAssist: false,

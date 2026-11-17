@@ -1,41 +1,35 @@
 /**
- * Entry point – clean first-run safety disclaimer or tabs
+ * Entry point – clean first-run gate to safety disclaimer or tabs
  */
 
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSettingsStore } from '../src/store/settingsStore';
-import SafetyScreen from './safety';
 
 export default function Index() {
   const router = useRouter();
   const { safetyAccepted, loadSettings } = useSettingsStore();
-  const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    let active = true;
     loadSettings().finally(() => {
-      setLoading(false);
+      if (active) setIsReady(true);
     });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (!loading && safetyAccepted) {
+    if (!isReady) return;
+    if (safetyAccepted) {
       router.replace('/(tabs)');
+    } else {
+      router.replace('/safety');
     }
-  }, [loading, safetyAccepted]);
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#4a9eff" />
-      </View>
-    );
-  }
-
-  if (!safetyAccepted) {
-    return <SafetyScreen onAccepted={() => router.replace('/(tabs)')} />;
-  }
+  }, [isReady, safetyAccepted]);
 
   return (
     <View style={styles.container}>

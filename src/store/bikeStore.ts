@@ -79,7 +79,7 @@ const initialState = {
   pending: null,
 };
 
-export const useBikeStore = create<BikeStore>((set, get) => ({
+export const useBikeStore = create<BikeStore>()((set, get) => ({
   ...initialState,
 
   setConnectionState: (connectionState) => {
