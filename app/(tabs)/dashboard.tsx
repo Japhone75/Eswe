@@ -20,7 +20,7 @@ import { EngweCommands } from '../../src/ble/EngweCommands';
 import * as Haptics from 'expo-haptics';
 
 export default function DashboardScreen() {
-  const { status, model, isVerified, connectionState, confirmedSpeedLimit, confirmedLights } =
+  const { status, model, isVerified, connectionState, confirmedSpeedLimit, confirmedLights, isDemoMode, stopDemo } =
     useBikeStore();
 
   const connected = connectionState === 'connected';
@@ -28,6 +28,10 @@ export default function DashboardScreen() {
   async function handleToggleLights() {
     if (!status) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (isDemoMode) {
+      useBikeStore.getState().updateStatus({ ...status, lightsOn: !status.lightsOn });
+      return;
+    }
     try {
       await bleManager.writeCommand(status.lightsOn ? EngweCommands.lightsOff : EngweCommands.lightsOn);
     } catch (e: unknown) {
@@ -43,6 +47,10 @@ export default function DashboardScreen() {
       return;
     }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (isDemoMode) {
+      useBikeStore.getState().updateStatus({ ...status, isOn: !isOn });
+      return;
+    }
     try {
       await bleManager.writeCommand(isOn ? EngweCommands.lock : EngweCommands.unlock);
     } catch (e: unknown) {
@@ -92,6 +100,18 @@ export default function DashboardScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
+          {/* Demo banner */}
+          {isDemoMode && (
+            <TouchableOpacity
+              style={styles.demoBanner}
+              onPress={stopDemo}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play-circle" size={16} color="#f59e0b" />
+              <Text style={styles.demoBannerText}>DEMO MODE · Tap to exit demo</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Model & verification badge */}
           <View style={styles.modelRow}>
             <Text style={styles.modelName} numberOfLines={1}>
@@ -251,6 +271,23 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 16, gap: 12, paddingBottom: 32 },
+  demoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#2a1a00',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#4a3000',
+  },
+  demoBannerText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#f59e0b',
+  },
   noConnText: { fontSize: 20, fontWeight: '700', color: '#4444aa', marginTop: 16 },
   noConnSub: { color: '#5555aa', marginTop: 8 },
   modelRow: {

@@ -41,6 +41,10 @@ if (NativeModules && NativeModules.ExceptionsManager) {
 
   NativeModules.ExceptionsManager.reportException = function (data) {
     console.error('CAUGHT EXCEPTION:', data);
+    // Ignore non-fatal warnings and guarded exceptions in production so release starts clean
+    if (data && data.isFatal === false) {
+      return;
+    }
     showAlert('App Notice', formatError(data));
   };
 }
@@ -48,6 +52,10 @@ if (NativeModules && NativeModules.ExceptionsManager) {
 if (typeof global !== 'undefined' && global.ErrorUtils) {
   global.ErrorUtils.setHandler((error, isFatal) => {
     console.error('CAUGHT GLOBAL ERROR:', error);
+    // Only alert on fatal errors that would otherwise break app execution
+    if (!isFatal) {
+      return;
+    }
     showAlert('App Error', formatError(error));
   });
 }

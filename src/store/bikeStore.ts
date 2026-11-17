@@ -49,6 +49,11 @@ type BikeStore = {
   // Pending confirmations
   pending: PendingConfirmation | null;
 
+  // Demo mode
+  isDemoMode: boolean;
+  startDemo: () => void;
+  stopDemo: () => void;
+
   // Actions
   setConnectionState: (state: ConnectionState) => void;
   setScanning: (scanning: boolean) => void;
@@ -61,6 +66,24 @@ type BikeStore = {
   setPending: (pending: PendingConfirmation | null) => void;
   handleEcho: (command: number, payload: Uint8Array) => void;
   reset: () => void;
+};
+
+let demoTimer: ReturnType<typeof setInterval> | null = null;
+
+const DEMO_STATUS: BikeStatus = {
+  speedKmh: 18.4,
+  maxSpeedKmh: 32.0,
+  odometer: 1247.3,
+  assistLevel: 3,
+  batteryPct: 78,
+  lightsOn: true,
+  temperatureC: 22,
+  batteryHealth: 94,
+  powerFlag1: 1,
+  powerFlag2: 1,
+  voltage: 42.56,
+  rideTimeMin: 2847,
+  isOn: true,
 };
 
 const initialState = {
@@ -77,14 +100,64 @@ const initialState = {
   confirmedLights: null,
   confirmedAssist: null,
   pending: null,
+  isDemoMode: false,
 };
 
 export const useBikeStore = create<BikeStore>()((set, get) => ({
   ...initialState,
 
+  startDemo: () => {
+    if (demoTimer) clearInterval(demoTimer);
+    set({
+      isDemoMode: true,
+      connectionState: 'connected',
+      model: VERIFIED_MODEL,
+      isVerified: true,
+      status: { ...DEMO_STATUS },
+      confirmedSpeedLimit: 25,
+      confirmedAssist: 3,
+      confirmedLights: true,
+    });
+
+    let tick = 0;
+    demoTimer = setInterval(() => {
+      tick++;
+      const speed = 18 + Math.sin(tick * 0.4) * 8;
+      const cur = get().status || DEMO_STATUS;
+      set({
+        status: {
+          ...cur,
+          speedKmh: Math.max(0, Math.round(speed * 10) / 10),
+        },
+      });
+    }, 1000);
+  },
+
+  stopDemo: () => {
+    if (demoTimer) {
+      clearInterval(demoTimer);
+      demoTimer = null;
+    }
+    set({
+      isDemoMode: false,
+      connectionState: 'disconnected',
+      status: null,
+      model: null,
+      isVerified: false,
+      confirmedSpeedLimit: null,
+      confirmedAssist: null,
+      confirmedLights: null,
+      connectedDeviceId: null,
+    });
+  },
+
   setConnectionState: (connectionState) => {
     set({ connectionState });
     if (connectionState === 'disconnected') {
+      if (demoTimer) {
+        clearInterval(demoTimer);
+        demoTimer = null;
+      }
       set({
         status: null,
         model: null,
@@ -95,6 +168,7 @@ export const useBikeStore = create<BikeStore>()((set, get) => ({
         confirmedAssist: null,
         pending: null,
         connectedDeviceId: null,
+        isDemoMode: false,
       });
     }
   },
@@ -141,10 +215,6 @@ export const useBikeStore = create<BikeStore>()((set, get) => ({
 
   setLockState: (lockState) => {
     set({ lockState });
-    const { pending } = get();
-    if (pending?.type === 'lock') {
-      // Lock state confirmed, wait for status to fully confirm
-    }
   },
 
   setPending: (pending) => set({ pending }),
@@ -166,11 +236,17 @@ export const useBikeStore = create<BikeStore>()((set, get) => ({
       return;
     }
 
-    // Assist echo: command 0x1009 (confirmation by status update above)
+    // Assist echo: command 0x1009
     if (command === 0x1009 && pending?.type === 'assist') {
-      // Don't clear pending yet – wait for status to confirm
+      // Handled by updateStatus
     }
   },
 
-  reset: () => set(initialState),
+  reset: () => {
+    if (demoTimer) {
+      clearInterval(demoTimer);
+      demoTimer = null;
+    }
+    set(initialState);
+  },
 }));

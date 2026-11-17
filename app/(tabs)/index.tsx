@@ -36,12 +36,6 @@ export default function ScannerScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (connectionState === 'connected') {
-      router.replace('/(tabs)/dashboard');
-    }
-  }, [connectionState]);
-
   async function handleScan() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
@@ -58,6 +52,7 @@ export default function ScannerScreen() {
     setConnecting(device.id);
     try {
       await bleManager.connect(device.id);
+      router.replace('/(tabs)/dashboard');
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Could not connect';
       Alert.alert('Connection Failed', msg);
@@ -177,7 +172,13 @@ export default function ScannerScreen() {
         )}
 
         {/* Demo mode */}
-        <TouchableOpacity style={styles.demoButton} onPress={() => router.push('/demo')}>
+        <TouchableOpacity
+          style={styles.demoButton}
+          onPress={() => {
+            useBikeStore.getState().startDemo();
+            router.replace('/(tabs)/dashboard');
+          }}
+        >
           <Ionicons name="play-circle-outline" size={18} color="#5555aa" />
           <Text style={styles.demoText}>Demo mode (no bike needed)</Text>
         </TouchableOpacity>

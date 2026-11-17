@@ -56,6 +56,10 @@ export default function ControlScreen() {
     }
 
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (useBikeStore.getState().isDemoMode) {
+      useBikeStore.setState({ confirmedSpeedLimit: speed });
+      return;
+    }
     setSendingSpeed(speed);
     try {
       await bleManager.writeCommand(speedCommands[speed]);
@@ -70,6 +74,14 @@ export default function ControlScreen() {
   async function handleSetAssist(level: number) {
     if (!connected) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (useBikeStore.getState().isDemoMode) {
+      const cur = useBikeStore.getState().status;
+      if (cur) {
+        useBikeStore.getState().updateStatus({ ...cur, assistLevel: level });
+      }
+      useBikeStore.setState({ confirmedAssist: level });
+      return;
+    }
     setSendingAssist(level);
     try {
       await bleManager.writeCommand(assistCommands[level]);
